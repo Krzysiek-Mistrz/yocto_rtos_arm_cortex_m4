@@ -1,0 +1,38 @@
+header:
+  version: 11
+
+machine: stm32f411-dk
+distro: recovery
+
+repos:
+  bitbake:
+    url: https://git.openembedded.org/bitbake
+    branch: "2.12"
+    path: sources/bitbake
+    layers:
+      .: "disabled"
+
+  openembedded-core:
+    url: https://git.openembedded.org/openembedded-core
+    branch: walnascar
+    path: sources/openembedded-core
+    layers:
+      meta:
+
+  meta-zephyr:
+    url: https://github.com/zephyrproject-rtos/meta-zephyr.git
+    branch: main
+    path: sources/meta-zephyr
+    layers:
+      .
+
+  meta-arm:
+    url: https://git.yoctoproject.org/meta-arm
+    branch: walnascar
+    path: sources/meta-arm
+    layers:
+      meta-arm
+      meta-arm-toolchain
+
+  meta-mono:
+    path: .
