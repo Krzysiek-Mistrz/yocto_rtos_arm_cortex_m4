@@ -1,6 +1,6 @@
-# STM32F411 Yocto Recovery System
+# STM32F411CEU6 Zephyr Recovery System
 
-A minimal embedded recovery system built with Yocto Project for STM32F411 Development Kit, featuring Zephyr RTOS, STM32 HAL integration, and comprehensive GPIO, communication interface, and recovery tools.
+A Zephyr RTOS-based recovery and diagnostic system built with Yocto Project for the STM32F411CEU6 microcontroller ("Black Pill" board). This project creates a **single monolithic firmware binary** with an interactive shell interface for hardware testing and recovery operations.
 
 ---
 
@@ -18,28 +18,32 @@ A minimal embedded recovery system built with Yocto Project for STM32F411 Develo
 
 ## What is This Project?
 
-This project is a **minimal embedded recovery and development system** for the **STM32F411 microcontroller** (ARM Cortex-M4), built using the **Yocto Project** build system. It's designed to:
+This project builds a **single Zephyr RTOS firmware binary** (~150KB) for the **STM32F411CEU6 microcontroller** (ARM Cortex-M4F @ 100MHz), using the **Yocto Project** build system. It provides:
 
-- **Provide a recovery environment** for STM32F411-based devices with essential diagnostic and programming tools
-- **Enable hardware testing and debugging** through command-line utilities for GPIO, I2C, SPI, and UART interfaces
-- **Offer flash programming and memory testing** capabilities for system recovery and validation
-- **Demonstrate Yocto Project usage** for embedded microcontroller systems with Zephyr RTOS
+- **Interactive shell interface** with recovery and diagnostic commands via UART
+- **Hardware testing tools** for GPIO, I2C, SPI, and UART (implemented as shell commands)
+- **Flash programming and memory testing** capabilities
+- **Monolithic binary** - no filesystem, no separate packages, everything compiled into one .bin file
+- **Real-time operation** with Zephyr RTOS kernel
 
 ### Key Features
 
-**Zephyr RTOS** - Lightweight real-time operating system optimized for microcontrollers  
-**STM32 HAL Integration** - Full hardware abstraction layer for reliable peripheral access  
-**GPIO Tools** - Command-line utilities for GPIO control, monitoring, and testing  
-**Interface Tools** - I2C, SPI, and UART communication utilities  
-**Recovery Tools** - Flash programming, memory testing, and system diagnostics  
-**Minimal Footprint** - Entire system fits in <1MB, boots in <1 second  
+**Zephyr RTOS** - Lightweight real-time operating system for microcontrollers  
+**Interactive Shell** - Command-line interface via UART console  
+**GPIO Commands** - Shell commands for GPIO control, monitoring, and testing  
+**Interface Commands** - I2C, SPI, and UART testing via shell  
+**Recovery Commands** - Flash programming, memory testing, and system info  
+**Tiny Footprint** - Single ~150KB binary, boots in <1 second  
+**No Filesystem** - Monolithic binary, all code compiled in  
 
 ### Target Hardware
 
-- **Microcontroller:** STM32F411 (ARM Cortex-M4 @ 100MHz)
+- **Microcontroller:** STM32F411CEU6 (ARM Cortex-M4F @ 100MHz)
+- **Board:** "Black Pill" or compatible STM32F411CEU6 development board
 - **Flash Memory:** 512KB internal
 - **RAM:** 128KB SRAM
-- **Peripherals:** GPIO, USART, I2C, SPI, USB OTG, ADC, Timers
+- **Peripherals:** GPIO, USART, I2C, SPI, USB OTG FS, ADC, Timers
+- **FPU:** Yes (Cortex-M4F with hardware floating point)
 
 ---
 
@@ -88,68 +92,59 @@ This is where you configure HOW things should be built.
 
 ---
 
-#### 3. recipes-core/images/ - Image Recipes (What Gets Built)
+#### 3. recipes-kernel/ - Kernel/RTOS Recipes
 
-- **`recovery-image.bb`** - The **recipe** that defines what goes into your final embedded system image:
-  - Includes: Zephyr kernel, STM32 HAL, GPIO tools, interface tools, recovery tools
-  - Creates binary, ELF, and HEX files for flashing to STM32F411
-  - Minimal features for embedded system (tools-debug only)
-  - Size optimized for microcontroller constraints
-  - Output: `.bin`, `.elf`, `.hex` files ready for flashing
+##### zephyr-recovery/ - Main Zephyr Recovery Application
 
----
+- **`zephyr-recovery_1.0.bb`** - Recipe to build the Zephyr recovery application
+- **`files/`** - Application source code and configuration:
+  - **`src/main.c`** - Main application with all shell commands implemented
+  - **`prj.conf`** - Zephyr kernel configuration (enables shell, GPIO, I2C, SPI, UART drivers)
+  - **`CMakeLists.txt`** - CMake build configuration for Zephyr
 
-#### 4. recipes-kernel/ - Kernel/RTOS Recipes
-
-##### zephyr/ - Zephyr RTOS
-
-- **`zephyr-kernel_3.5.bb`** - Recipe to build Zephyr RTOS version 3.5 for STM32F411
-- **`files/`** - Zephyr configuration files:
-  - **`stm32f411_defconfig`** - Zephyr kernel configuration (which features to enable)
-  - **`stm32f411-dk.dts`** - Device Tree Source file (describes the hardware to Zephyr - memory layout, peripherals, GPIO pins, communication interfaces)
+**This is the main recipe that builds the entire recovery system as a single binary.**
 
 ---
 
-#### 5. recipes-bsp/ - Board Support Package
+#### 4. recipes-bsp/ - Board Support Package
 
-- **`stm32-hal/stm32f4-hal_1.28.0.bb`** - Recipe for STM32F4 Hardware Abstraction Layer
-  - Downloads STM32CubeF4 from STMicroelectronics
-  - Compiles HAL drivers for STM32F411
-  - Provides standardized hardware access for all peripherals
-  - Used by all custom tools for reliable hardware control
+- **`stm32-hal/`** - STM32F4 HAL (if present, for reference)
+  - **Note:** Zephyr uses its own device drivers, not STM32 HAL
+  - This directory may contain HAL code for reference purposes only
 
 ---
 
-#### 6. recipes-support/ - Support Tools and Utilities
+#### 5. recipes-support/ - Reference Code (NOT USED IN BUILD)
 
-##### gpio-tools/ - GPIO Manipulation Tools
+**Important:** These directories contain **Linux userspace C code** that is **NOT compiled** into the Zephyr binary. They are kept as **reference material** for implementing the actual Zephyr shell commands.
 
-- **`gpio-tools_1.0.bb`** - Recipe for GPIO utilities
-- **`files/`** - Source code:
-  - **`gpio-test.c`** - Toggle GPIO pins for testing (e.g., blink LED)
-  - **`gpio-monitor.c`** - Monitor GPIO pin state changes in real-time
-  - **`gpio-set.c`** - Set GPIO pin HIGH/LOW or read current state
-  - **`Makefile`** - Build configuration
+##### gpio-tools/ - GPIO Reference Code
 
-##### interface-tools/ - Communication Interface Tools
+- **`files/`** - Linux userspace GPIO code (reference only):
+  - **`gpio-test.c`** - Example GPIO toggle code
+  - **`gpio-monitor.c`** - Example GPIO monitoring
+  - **`gpio-set.c`** - Example GPIO control
+  - **`Makefile`** - Not used
 
-- **`interface-tools_1.0.bb`** - Recipe for communication utilities
-- **`files/`** - Source code:
-  - **`i2c-scan.c`** - Scan I2C bus for connected devices
-  - **`i2c-read.c`** - Read data from I2C device registers
-  - **`i2c-write.c`** - Write data to I2C device registers
-  - **`spi-test.c`** - Test SPI communication (full-duplex transfer)
-  - **`uart-test.c`** - Test UART communication (send/receive/loopback)
-  - **`Makefile`** - Build configuration
+##### interface-tools/ - Communication Interface Reference Code
 
-##### recovery-tools/ - System Recovery and Diagnostic Tools
+- **`files/`** - Linux userspace communication code (reference only):
+  - **`i2c-scan.c`** - Example I2C bus scanning
+  - **`i2c-read.c`** - Example I2C read operations
+  - **`i2c-write.c`** - Example I2C write operations
+  - **`spi-test.c`** - Example SPI communication
+  - **`uart-test.c`** - Example UART communication
+  - **`Makefile`** - Not used
 
-- **`recovery-tools_1.0.bb`** - Recipe for recovery utilities
-- **`files/`** - Source code:
-  - **`flash-program.c`** - Program STM32F411 internal flash (erase/write/read/verify)
-  - **`memory-test.c`** - Test SRAM integrity with multiple patterns
-  - **`system-info.c`** - Display comprehensive system information (clocks, peripherals, reset cause)
-  - **`Makefile`** - Build configuration
+##### recovery-tools/ - Recovery Tools Reference Code
+
+- **`files/`** - Linux userspace recovery code (reference only):
+  - **`flash-program.c`** - Example flash programming logic
+  - **`memory-test.c`** - Example memory testing patterns
+  - **`system-info.c`** - Example system information display
+  - **`Makefile`** - Not used
+
+**These files can be used as reference when implementing the actual functionality in `recipes-kernel/zephyr-recovery/files/src/main.c` using Zephyr APIs.**
 
 ---
 
