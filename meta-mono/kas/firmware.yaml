@@ -4,6 +4,9 @@ header:
 machine: stm32f411-dk
 distro: recovery
 
+target:
+  - zephyr-recovery
+
 repos:
   bitbake:
     url: https://git.openembedded.org/bitbake
@@ -19,20 +22,29 @@ repos:
     layers:
       meta:
 
+  meta-openembedded:
+    url: https://git.openembedded.org/meta-openembedded
+    branch: walnascar
+    path: sources/meta-openembedded
+    layers:
+      meta-oe:
+      meta-python:
+
   meta-zephyr:
-    url: https://github.com/zephyrproject-rtos/meta-zephyr.git
-    branch: main
+    url: https://git.yoctoproject.org/meta-zephyr
+    branch: walnascar
     path: sources/meta-zephyr
     layers:
-      .
+      meta-zephyr-core:
+      meta-zephyr-bsp:
 
   meta-arm:
     url: https://git.yoctoproject.org/meta-arm
     branch: walnascar
     path: sources/meta-arm
     layers:
-      meta-arm
-      meta-arm-toolchain
+      meta-arm:
+      meta-arm-toolchain:
 
   meta-mono:
     path: .
