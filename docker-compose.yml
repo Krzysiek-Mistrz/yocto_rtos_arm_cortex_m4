@@ -1,0 +1,72 @@
+services:
+  yocto-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Match your host user ID to avoid permission issues
+        # Run 'id -u' and 'id -g' on your host to get these values
+        USERNAME: yoctouser
+        USER_UID: 1000
+        USER_GID: 1000
+    
+    container_name: stm32f411-yocto-builder
+    
+    # Mount the project directory
+    volumes:
+      # Project source code
+      - ./:/workspace:rw
+      
+      # Persistent cache directories (speeds up rebuilds significantly)
+      # These will be created in your project directory
+      - ./yocto-cache/downloads:/workspace/meta-mono/build/downloads:rw
+      - ./yocto-cache/sstate-cache:/workspace/meta-mono/build/sstate-cache:rw
+      
+      # Optional: Share SSH keys for private Git repos
+      # - ~/.ssh:/home/yoctouser/.ssh:ro
+      
+      # Optional: Share Git config
+      # - ~/.gitconfig:/home/yoctouser/.gitconfig:ro
+    
+    # Working directory inside container
+    working_dir: /workspace
+    
+    # Keep container running
+    stdin_open: true
+    tty: true
+    
+    # Resource limits (adjust based on your system)
+    # Yocto builds are CPU and memory intensive
+    deploy:
+      resources:
+        limits:
+          cpus: '8'      # Adjust based on your CPU cores
+          memory: 16G    # Minimum 8GB recommended, 16GB+ ideal
+        reservations:
+          cpus: '4'
+          memory: 8G
+    
+    # Environment variables
+    environment:
+      # Yocto build optimization
+      - BB_NUMBER_THREADS=8        # Parallel BitBake tasks (adjust to CPU cores)
+      - PARALLEL_MAKE=-j8          # Parallel make jobs (adjust to CPU cores)
+      
+      # Cache directories
+      - DL_DIR=/workspace/meta-mono/build/downloads
+      - SSTATE_DIR=/workspace/meta-mono/build/sstate-cache
+      
+      # Locale
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      
+      # Optional: Proxy settings (uncomment if needed)
+      # - http_proxy=http://proxy.example.com:8080
+      # - https_proxy=http://proxy.example.com:8080
+      # - no_proxy=localhost,127.0.0.1
+    
+    # Network mode
+    network_mode: bridge
+    
+    # Command to run (keeps container alive)
+    command: /bin/bash
