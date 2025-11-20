@@ -3,11 +3,11 @@ DESCRIPTION = "STMicroelectronics STM32F4xx HAL and LL drivers for STM32F411"
 LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE.md;md5=8b4e8e5e0c7b3c3e3e3e3e3e3e3e3e3e"
 
-# STM32CubeF4 repository
-SRC_URI = "git://github.com/STMicroelectronics/STM32CubeF4.git;protocol=https;branch=master"
-SRCREV = "${AUTOREV}"
+# STM32CubeF4 repository - using release tarball to avoid git fetch issues
+SRC_URI = "https://github.com/STMicroelectronics/STM32CubeF4/archive/refs/tags/v${PV}.tar.gz"
+SRC_URI[sha256sum] = ""
 
-S = "${WORKDIR}/git"
+S = "${WORKDIR}/STM32CubeF4-${PV}"
 
 inherit cmake
 
