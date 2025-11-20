@@ -1,6 +1,3 @@
-# Patch Zephyr to disable abort on Kconfig warnings
-# This is needed for Yocto builds with external toolchains
-
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 # Fix broken GitHub URLs in scarthgap meta-zephyr
@@ -16,7 +13,7 @@ python () {
     d.setVar('SRC_URI', ' '.join(new_src_uri))
 }
 
-# Patches removed - issues resolved by different methods
+# Patches removed - issues resolved by different methods (fixing cmsis)
 # SRC_URI += "file://0001-kconfig-disable-abort-on-warnings.patch \
 #             file://0002-blackpill-remove-broken-pinctrl-include.patch \
 #            "
