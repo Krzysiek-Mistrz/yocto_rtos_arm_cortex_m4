@@ -5,10 +5,11 @@ services:
       dockerfile: Dockerfile
       args:
         # Match your host user ID to avoid permission issues
-        # Run 'id -u' and 'id -g' on your host to get these values
+        # These will automatically use your host user's UID/GID
+        # Or you can override by setting UID and GID environment variables
         USERNAME: yoctouser
-        USER_UID: 1000
-        USER_GID: 1000
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
     
     container_name: stm32f411-yocto-builder
     
@@ -51,6 +52,7 @@ services:
       # Yocto build optimization
       - BB_NUMBER_THREADS=8        # Parallel BitBake tasks (adjust to CPU cores)
       - PARALLEL_MAKE=-j8          # Parallel make jobs (adjust to CPU cores)
+      - BB_NUMBER_FETCH_THREADS=4  # Limit parallel downloads to prevent network issues
       
       # Cache directories
       - DL_DIR=/workspace/meta-mono/build/downloads
