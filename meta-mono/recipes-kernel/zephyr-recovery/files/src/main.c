@@ -5,6 +5,8 @@
  * All tools are implemented as Zephyr shell commands
  */
 
+/* Correct include for the generated version file */
+#include <version.h>
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 #include <zephyr/device.h>

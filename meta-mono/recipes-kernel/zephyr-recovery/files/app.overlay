@@ -1,0 +1,88 @@
+/*
+ * Device tree overlay for STM32F411CEU6 Blackpill
+ * Fixes missing flash reg property
+ * STM32F411CE has 512KB flash (0x80000 bytes)
+ * Defines pinctrl for all peripherals used by the board
+ */
+
+#include <dt-bindings/pinctrl/stm32-pinctrl.h>
+
+&flash0 {
+	reg = <0x08000000 0x80000>;
+};
+
+/* Define pinctrl nodes for all peripherals referenced in board DTS */
+&pinctrl {
+	/* USART1 - PA9/PA10 */
+	usart1_tx_pa9: usart1_tx_pa9 {
+		pinmux = <STM32_PINMUX('A', 9, AF7)>;
+	};
+	usart1_rx_pa10: usart1_rx_pa10 {
+		pinmux = <STM32_PINMUX('A', 10, AF7)>;
+		bias-pull-up;
+	};
+	
+	/* USART2 - PA2/PA3 */
+	usart2_tx_pa2: usart2_tx_pa2 {
+		pinmux = <STM32_PINMUX('A', 2, AF7)>;
+	};
+	usart2_rx_pa3: usart2_rx_pa3 {
+		pinmux = <STM32_PINMUX('A', 3, AF7)>;
+		bias-pull-up;
+	};
+	
+	/* I2C1 - PB8/PB9 */
+	i2c1_scl_pb8: i2c1_scl_pb8 {
+		pinmux = <STM32_PINMUX('B', 8, AF4)>;
+		bias-pull-up;
+		drive-open-drain;
+	};
+	i2c1_sda_pb9: i2c1_sda_pb9 {
+		pinmux = <STM32_PINMUX('B', 9, AF4)>;
+		bias-pull-up;
+		drive-open-drain;
+	};
+	
+	/* SPI1 - PA4/PA5/PA6/PA7 */
+	spi1_nss_pa4: spi1_nss_pa4 {
+		pinmux = <STM32_PINMUX('A', 4, AF5)>;
+	};
+	spi1_sck_pa5: spi1_sck_pa5 {
+		pinmux = <STM32_PINMUX('A', 5, AF5)>;
+	};
+	spi1_miso_pa6: spi1_miso_pa6 {
+		pinmux = <STM32_PINMUX('A', 6, AF5)>;
+	};
+	spi1_mosi_pa7: spi1_mosi_pa7 {
+		pinmux = <STM32_PINMUX('A', 7, AF5)>;
+	};
+	
+	/* USB OTG FS - PA11/PA12 */
+	usb_otg_fs_dm_pa11: usb_otg_fs_dm_pa11 {
+		pinmux = <STM32_PINMUX('A', 11, AF10)>;
+	};
+	usb_otg_fs_dp_pa12: usb_otg_fs_dp_pa12 {
+		pinmux = <STM32_PINMUX('A', 12, AF10)>;
+	};
+	
+	/* ADC1 - PA1 */
+	adc1_in1_pa1: adc1_in1_pa1 {
+		pinmux = <STM32_PINMUX('A', 1, ANALOG)>;
+	};
+	
+	/* TIM4 PWM - PB6/PB7 */
+	tim4_ch1_pb6: tim4_ch1_pb6 {
+		pinmux = <STM32_PINMUX('B', 6, AF2)>;
+	};
+	tim4_ch2_pb7: tim4_ch2_pb7 {
+		pinmux = <STM32_PINMUX('B', 7, AF2)>;
+	};
+};
+
+/* Enable USART2 for console (PA2=TX, PA3=RX) */
+&usart2 {
+	pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+	pinctrl-names = "default";
+	current-speed = <115200>;
+	status = "okay";
+};

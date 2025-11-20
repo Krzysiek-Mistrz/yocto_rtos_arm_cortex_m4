@@ -1,0 +1,2 @@
+# Empty Kconfig fragment
+# Kconfig warnings are handled by patching kconfig.cmake
