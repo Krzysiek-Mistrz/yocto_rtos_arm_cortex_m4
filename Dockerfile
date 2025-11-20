@@ -35,20 +35,20 @@ RUN apt-get update && apt-get install -y \
     # Cleanup
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install CMake 3.17.2 (compatible with Zephyr)
-# Newer CMake versions (3.19+) have issues with Zephyr toolchain detection
+# Install CMake 3.20.5 (compatible with Zephyr)
 RUN cd /tmp && \
-    wget -q https://github.com/Kitware/CMake/releases/download/v3.17.2/cmake-3.17.2-Linux-x86_64.sh && \
-    chmod +x cmake-3.17.2-Linux-x86_64.sh && \
-    ./cmake-3.17.2-Linux-x86_64.sh --skip-license --prefix=/usr/local && \
-    rm cmake-3.20.2-Linux-x86_64.sh && \
+    wget -q https://github.com/Kitware/CMake/releases/download/v3.20.5/cmake-3.20.5-Linux-x86_64.sh && \
+    chmod +x cmake-3.20.5-Linux-x86_64.sh && \
+    ./cmake-3.20.5-Linux-x86_64.sh --skip-license --prefix=/usr/local && \
+    rm cmake-3.20.5-Linux-x86_64.sh && \
     cmake --version
 
 # Install KAS build tool
-RUN pip3 install --no-cache-dir kas
+# Add timeout and retry settings to handle network issues
+RUN pip3 install --default-timeout=100 --retries 5 --no-cache-dir kas
 
 # Install additional Python packages that might be needed
-RUN pip3 install --no-cache-dir \
+RUN pip3 install --default-timeout=100 --retries 5 --no-cache-dir \
     GitPython \
     jinja2 \
     ply \
