@@ -4,27 +4,34 @@ header:
 machine: stm32f411-dk
 distro: recovery
 
+local_conf_header:
+  multiconfig: |
+    BB_CURRENT_MC = "default"
+  fetch_threads: |
+    # Limit parallel downloads to 4 to prevent network overload
+    BB_NUMBER_FETCH_THREADS = "4"
+
 target:
   - zephyr-recovery
 
 repos:
   bitbake:
     url: https://git.openembedded.org/bitbake
-    branch: "2.12"
+    branch: "2.8"
     path: sources/bitbake
     layers:
       .: "disabled"
 
   openembedded-core:
     url: https://git.openembedded.org/openembedded-core
-    branch: walnascar
+    branch: scarthgap
     path: sources/openembedded-core
     layers:
       meta:
 
   meta-openembedded:
     url: https://git.openembedded.org/meta-openembedded
-    branch: walnascar
+    branch: scarthgap
     path: sources/meta-openembedded
     layers:
       meta-oe:
@@ -32,7 +39,7 @@ repos:
 
   meta-zephyr:
     url: https://git.yoctoproject.org/meta-zephyr
-    branch: walnascar
+    branch: scarthgap
     path: sources/meta-zephyr
     layers:
       meta-zephyr-core:
@@ -40,7 +47,7 @@ repos:
 
   meta-arm:
     url: https://git.yoctoproject.org/meta-arm
-    branch: walnascar
+    branch: scarthgap
     path: sources/meta-arm
     layers:
       meta-arm:
