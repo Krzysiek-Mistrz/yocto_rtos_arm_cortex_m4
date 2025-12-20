@@ -99,26 +99,87 @@ RUN git config --global user.name "Yocto Builder" && \
     git config --global user.email "builder@localhost" && \
     git config --global color.ui auto
 
+# Avoid Git "dubious ownership" failures when working with bind-mounted workspaces
+# (common in Docker setups where host UID/GID differ from container users).
+# Setting this at SYSTEM level makes it apply regardless of which user you exec into.
+USER root
+RUN git config --system --add safe.directory '*'
+
+# Switch back to non-root user for normal operation
+USER $USERNAME
+
 # Environment variables for Yocto build optimization
 ENV BB_ENV_PASSTHROUGH_ADDITIONS="SSTATE_DIR DL_DIR TMPDIR"
 
 # Create entrypoint script to fix ownership issues
 # This runs every time the container starts
 USER root
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-# Fix ownership of workspace to match the yoctouser\n\
-echo "Fixing ownership of /workspace/meta-mono..."\n\
-chown -R yoctouser:yoctouser /workspace/meta-mono 2>/dev/null || true\n\
-\n\
-# Execute command as yoctouser\n\
-if [ "$1" = "bash" ] || [ "$1" = "/bin/bash" ] || [ -z "$1" ]; then\n\
-    exec gosu yoctouser /bin/bash\n\
-else\n\
-    exec gosu yoctouser "$@"\n\
-fi' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+RUN cat <<'EOF' > /entrypoint.sh
+#!/bin/bash
+set -e
+
+# Entrypoint is designed to work whether the container is started as root or as an
+# unprivileged user (recommended for Yocto/BitBake).
+# BitBake refuses to run as root, so the default container user should be non-root.
+
+TARGET_USER=${YOCTO_USER:-yoctouser}
+TARGET_HOME=${YOCTO_HOME:-/home/${TARGET_USER}}
+
+# Fix ownership so host-mounted files stay writable.
+# When running as non-root, we rely on passwordless sudo (configured in Dockerfile).
+if [ -d /workspace/meta-mono ]; then
+    echo "Fixing ownership of /workspace/meta-mono (if needed)..."
+    if [ "$(id -u)" -eq 0 ]; then
+        chown -R ${TARGET_USER}:${TARGET_USER} /workspace/meta-mono 2>/dev/null || true
+    else
+        sudo chown -R ${TARGET_USER}:${TARGET_USER} /workspace/meta-mono 2>/dev/null || true
+    fi
+fi
+
+# Configure git safe.directory to avoid "dubious ownership" failures with bind mounts.
+SAFE_DIRS=(
+    /workspace/meta-mono
+    /workspace/meta-mono/sources
+)
+if [ -d /workspace/meta-mono/sources ]; then
+    while IFS= read -r repo; do
+        SAFE_DIRS+=("$repo")
+    done < <(find /workspace/meta-mono/sources -maxdepth 1 -mindepth 1 -type d)
+fi
+
+for dir in "${SAFE_DIRS[@]}"; do
+    [ -d "$dir" ] || continue
+
+    # Configure for current user
+    git config --global --add safe.directory "$dir" 2>/dev/null || true
+
+    # If we're root, also configure for the target build user
+    if [ "$(id -u)" -eq 0 ]; then
+        gosu "${TARGET_USER}" env HOME="${TARGET_HOME}" \
+            git config --global --add safe.directory "$dir" 2>/dev/null || true
+    fi
+done
+
+# Execute command
+if [ "$1" = "bash" ] || [ "$1" = "/bin/bash" ] || [ -z "$1" ]; then
+    if [ "$(id -u)" -eq 0 ]; then
+        exec gosu "${TARGET_USER}" /bin/bash
+    else
+        exec /bin/bash
+    fi
+else
+    if [ "$(id -u)" -eq 0 ]; then
+        exec gosu "${TARGET_USER}" "$@"
+    else
+        exec "$@"
+    fi
+fi
+EOF
+RUN chmod +x /entrypoint.sh
+
+# Default to non-root user so BitBake/kas runs without triggering sanity checks.
+# Entrypoint will use sudo for the (optional) ownership fix.
+USER $USERNAME
 
 ENTRYPOINT ["/entrypoint.sh"]
 

@@ -29,6 +29,9 @@ services:
       # Optional: Share Git config
       # - ~/.gitconfig:/home/yoctouser/.gitconfig:ro
     
+    # Run as the non-root build user (BitBake refuses to run as root)
+    user: "${UID:-1000}:${GID:-1000}"
+
     # Working directory inside container
     working_dir: /workspace
     
