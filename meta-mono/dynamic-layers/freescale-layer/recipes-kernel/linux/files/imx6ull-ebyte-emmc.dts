@@ -1,0 +1,228 @@
+/*
+ * Device Tree for EBYTE i.MX6ULL SoM (ECK20-6Y28C) with eMMC
+ * Based on imx6ull-14x14-evk.dts
+ * 
+ * Key modifications:
+ * - UART2 enabled for STM32F411 communication
+ * - UART1 configured as console
+ * - eMMC support
+ */
+
+/dts-v1/;
+
+#include "imx6ull.dtsi"
+
+/ {
+    model = "EBYTE i.MX6ULL ECK20-6Y28C SoM";
+    compatible = "ebyte,imx6ull-eck20", "fsl,imx6ull";
+
+    chosen {
+        stdout-path = &uart1;
+    };
+
+    memory@80000000 {
+        device_type = "memory";
+        reg = <0x80000000 0x20000000>; /* 512MB DDR3 */
+    };
+
+    regulators {
+        compatible = "simple-bus";
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        reg_3p3v: regulator@0 {
+            compatible = "regulator-fixed";
+            reg = <0>;
+            regulator-name = "3P3V";
+            regulator-min-microvolt = <3300000>;
+            regulator-max-microvolt = <3300000>;
+            regulator-always-on;
+        };
+    };
+};
+
+/* UART1 - Linux Console */
+&uart1 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_uart1>;
+    status = "okay";
+};
+
+/* UART2 - STM32F411 Communication */
+&uart2 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_uart2>;
+    status = "okay";
+};
+
+/* eMMC */
+&usdhc2 {
+    pinctrl-names = "default", "state_100mhz", "state_200mhz";
+    pinctrl-0 = <&pinctrl_usdhc2>;
+    pinctrl-1 = <&pinctrl_usdhc2_100mhz>;
+    pinctrl-2 = <&pinctrl_usdhc2_200mhz>;
+    non-removable;
+    bus-width = <8>;
+    status = "okay";
+};
+
+/* Ethernet */
+&fec1 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_enet1>;
+    phy-mode = "rmii";
+    phy-handle = <&ethphy0>;
+    status = "okay";
+};
+
+&fec2 {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_enet2>;
+    phy-mode = "rmii";
+    phy-handle = <&ethphy1>;
+    status = "okay";
+
+    mdio {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        ethphy0: ethernet-phy@0 {
+            compatible = "ethernet-phy-ieee802.3-c22";
+            reg = <0>;
+        };
+
+        ethphy1: ethernet-phy@1 {
+            compatible = "ethernet-phy-ieee802.3-c22";
+            reg = <1>;
+        };
+    };
+};
+
+/* I2C1 */
+&i2c1 {
+    clock-frequency = <100000>;
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_i2c1>;
+    status = "okay";
+};
+
+/* I2C2 */
+&i2c2 {
+    clock-frequency = <100000>;
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_i2c2>;
+    status = "okay";
+};
+
+/* Pin multiplexing */
+&iomuxc {
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_hog_1>;
+
+    pinctrl_hog_1: hoggrp-1 {
+        fsl,pins = <
+            /* Add any GPIO pins here */
+        >;
+    };
+
+    pinctrl_uart1: uart1grp {
+        fsl,pins = <
+            MX6UL_PAD_UART1_TX_DATA__UART1_DCE_TX   0x1b0b1
+            MX6UL_PAD_UART1_RX_DATA__UART1_DCE_RX   0x1b0b1
+        >;
+    };
+
+    pinctrl_uart2: uart2grp {
+        fsl,pins = <
+            MX6UL_PAD_UART2_TX_DATA__UART2_DCE_TX   0x1b0b1
+            MX6UL_PAD_UART2_RX_DATA__UART2_DCE_RX   0x1b0b1
+        >;
+    };
+
+    pinctrl_usdhc2: usdhc2grp {
+        fsl,pins = <
+            MX6UL_PAD_NAND_RE_B__USDHC2_CLK         0x10069
+            MX6UL_PAD_NAND_WE_B__USDHC2_CMD         0x17059
+            MX6UL_PAD_NAND_DATA00__USDHC2_DATA0     0x17059
+            MX6UL_PAD_NAND_DATA01__USDHC2_DATA1     0x17059
+            MX6UL_PAD_NAND_DATA02__USDHC2_DATA2     0x17059
+            MX6UL_PAD_NAND_DATA03__USDHC2_DATA3     0x17059
+            MX6UL_PAD_NAND_DATA04__USDHC2_DATA4     0x17059
+            MX6UL_PAD_NAND_DATA05__USDHC2_DATA5     0x17059
+            MX6UL_PAD_NAND_DATA06__USDHC2_DATA6     0x17059
+            MX6UL_PAD_NAND_DATA07__USDHC2_DATA7     0x17059
+        >;
+    };
+
+    pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
+        fsl,pins = <
+            MX6UL_PAD_NAND_RE_B__USDHC2_CLK         0x100b9
+            MX6UL_PAD_NAND_WE_B__USDHC2_CMD         0x170b9
+            MX6UL_PAD_NAND_DATA00__USDHC2_DATA0     0x170b9
+            MX6UL_PAD_NAND_DATA01__USDHC2_DATA1     0x170b9
+            MX6UL_PAD_NAND_DATA02__USDHC2_DATA2     0x170b9
+            MX6UL_PAD_NAND_DATA03__USDHC2_DATA3     0x170b9
+            MX6UL_PAD_NAND_DATA04__USDHC2_DATA4     0x170b9
+            MX6UL_PAD_NAND_DATA05__USDHC2_DATA5     0x170b9
+            MX6UL_PAD_NAND_DATA06__USDHC2_DATA6     0x170b9
+            MX6UL_PAD_NAND_DATA07__USDHC2_DATA7     0x170b9
+        >;
+    };
+
+    pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
+        fsl,pins = <
+            MX6UL_PAD_NAND_RE_B__USDHC2_CLK         0x100f9
+            MX6UL_PAD_NAND_WE_B__USDHC2_CMD         0x170f9
+            MX6UL_PAD_NAND_DATA00__USDHC2_DATA0     0x170f9
+            MX6UL_PAD_NAND_DATA01__USDHC2_DATA1     0x170f9
+            MX6UL_PAD_NAND_DATA02__USDHC2_DATA2     0x170f9
+            MX6UL_PAD_NAND_DATA03__USDHC2_DATA3     0x170f9
+            MX6UL_PAD_NAND_DATA04__USDHC2_DATA4     0x170f9
+            MX6UL_PAD_NAND_DATA05__USDHC2_DATA5     0x170f9
+            MX6UL_PAD_NAND_DATA06__USDHC2_DATA6     0x170f9
+            MX6UL_PAD_NAND_DATA07__USDHC2_DATA7     0x170f9
+        >;
+    };
+
+    pinctrl_enet1: enet1grp {
+        fsl,pins = <
+            MX6UL_PAD_ENET1_RX_EN__ENET1_RX_EN      0x1b0b0
+            MX6UL_PAD_ENET1_RX_ER__ENET1_RX_ER      0x1b0b0
+            MX6UL_PAD_ENET1_RX_DATA0__ENET1_RDATA00 0x1b0b0
+            MX6UL_PAD_ENET1_RX_DATA1__ENET1_RDATA01 0x1b0b0
+            MX6UL_PAD_ENET1_TX_EN__ENET1_TX_EN      0x1b0b0
+            MX6UL_PAD_ENET1_TX_DATA0__ENET1_TDATA00 0x1b0b0
+            MX6UL_PAD_ENET1_TX_DATA1__ENET1_TDATA01 0x1b0b0
+            MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1  0x4001b031
+        >;
+    };
+
+    pinctrl_enet2: enet2grp {
+        fsl,pins = <
+            MX6UL_PAD_GPIO1_IO07__ENET2_MDC         0x1b0b0
+            MX6UL_PAD_GPIO1_IO06__ENET2_MDIO        0x1b0b0
+            MX6UL_PAD_ENET2_RX_EN__ENET2_RX_EN      0x1b0b0
+            MX6UL_PAD_ENET2_RX_ER__ENET2_RX_ER      0x1b0b0
+            MX6UL_PAD_ENET2_RX_DATA0__ENET2_RDATA00 0x1b0b0
+            MX6UL_PAD_ENET2_RX_DATA1__ENET2_RDATA01 0x1b0b0
+            MX6UL_PAD_ENET2_TX_EN__ENET2_TX_EN      0x1b0b0
+            MX6UL_PAD_ENET2_TX_DATA0__ENET2_TDATA00 0x1b0b0
+            MX6UL_PAD_ENET2_TX_DATA1__ENET2_TDATA01 0x1b0b0
+            MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2  0x4001b031
+        >;
+    };
+
+    pinctrl_i2c1: i2c1grp {
+        fsl,pins = <
+            MX6UL_PAD_UART4_TX_DATA__I2C1_SCL       0x4001b8b0
+            MX6UL_PAD_UART4_RX_DATA__I2C1_SDA       0x4001b8b0
+        >;
+    };
+
+    pinctrl_i2c2: i2c2grp {
+        fsl,pins = <
+            MX6UL_PAD_UART5_TX_DATA__I2C2_SCL       0x4001b8b0
+            MX6UL_PAD_UART5_RX_DATA__I2C2_SDA       0x4001b8b0
+        >;
+    };
+};
