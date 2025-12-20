@@ -1,0 +1,75 @@
+header:
+  version: 11
+
+machine: imx6ull-ebyte
+distro: imx6ull-linux
+
+local_conf_header:
+  multiconfig: |
+    BB_CURRENT_MC = "default"
+  fetch_threads: |
+    # Limit parallel downloads to 2 to prevent network overload
+    BB_NUMBER_FETCH_THREADS = "2"
+    BB_NUMBER_THREADS = "2"
+  fetch_robustness: |
+    # Work around flaky networks/proxies that break GitHub clones over HTTP/2
+    # (common symptom: "RPC failed; curl 92 HTTP/2 stream ... was not closed cleanly: CANCEL")
+    FETCHCMD_git = "git -c http.version=HTTP/1.1 -c gc.autoDetach=false -c core.pager=cat -c safe.bareRepository=all -c http.postBuffer=524288000"
+
+    # Make wget more tolerant of slow/unstable links for large tarballs
+    # Default is "/usr/bin/env wget -t 2 -T 100" which often times out on big downloads.
+    FETCHCMD_wget = "/usr/bin/env wget -t 5 -T 300 --retry-connrefused --waitretry=5"
+  accept_fsl_eula: |
+    # Accept Freescale EULA for i.MX firmware and drivers
+    ACCEPT_FSL_EULA = "1"
+  systemd_usrmerge: |
+    # systemd in Yocto Scarthgap requires usrmerge
+    DISTRO_FEATURES:append = " usrmerge"
+
+target:
+  - imx6ull-uart-bridge-image
+
+repos:
+  bitbake:
+    url: https://git.openembedded.org/bitbake
+    branch: "2.8"
+    path: sources/bitbake
+    layers:
+      .: "disabled"
+
+  # Use poky as the core repo (it already contains oe-core and the init scripts).
+  # Do NOT include openembedded-core separately, otherwise kas sees multiple init scripts.
+  poky:
+    url: https://git.yoctoproject.org/poky
+    branch: scarthgap
+    path: sources/poky
+    layers:
+      meta:
+      meta-poky:
+      meta-yocto-bsp:
+
+  meta-openembedded:
+    url: https://git.openembedded.org/meta-openembedded
+    branch: scarthgap
+    path: sources/meta-openembedded
+    layers:
+      meta-oe:
+      meta-python:
+      meta-networking:
+
+  meta-freescale:
+    url: https://github.com/Freescale/meta-freescale
+    branch: scarthgap
+    path: sources/meta-freescale
+    layers:
+      .:
+
+  meta-freescale-distro:
+    url: https://github.com/Freescale/meta-freescale-distro
+    branch: scarthgap
+    path: sources/meta-freescale-distro
+    layers:
+      .:
+
+  meta-mono:
+    path: .

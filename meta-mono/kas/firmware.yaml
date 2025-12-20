@@ -10,6 +10,12 @@ local_conf_header:
   fetch_threads: |
     # Limit parallel downloads to 4 to prevent network overload
     BB_NUMBER_FETCH_THREADS = "4"
+  fetch_robustness: |
+    # Work around flaky networks/proxies that break GitHub clones over HTTP/2
+    FETCHCMD_git = "git -c http.version=HTTP/1.1 -c gc.autoDetach=false -c core.pager=cat -c safe.bareRepository=all"
+
+    # Make wget more tolerant of slow/unstable links for large tarballs
+    FETCHCMD_wget = "/usr/bin/env wget -t 5 -T 300 --retry-connrefused --waitretry=5"
 
 target:
   - zephyr-recovery
@@ -55,3 +61,7 @@ repos:
 
   meta-mono:
     path: .
+
+  # Zephyr-only extensions (bbappends that expect meta-zephyr to be present)
+  meta-mono-zephyr:
+    path: meta-mono-zephyr
