@@ -233,4 +233,4 @@ Yocto Project components under their respective licenses.
 ---
 
 *Built with ❤️ using Yocto Project, Zephyr RTOS, and Docker*
-*MIT License © 2025*
+*Modified MIT License © 2025*
