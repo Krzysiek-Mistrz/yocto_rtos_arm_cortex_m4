@@ -153,6 +153,7 @@ The Linux image is minimal but feature-rich for development:
 *   **Hardware Tools:**
     *   `i2c-tools` (i2cdetect, i2cget, etc.)
     *   `spitools`
+    *   `socat` (UART testing and socket communication)
     *   `uart-bridge` (Custom daemon)
 *   **Debugging:** GDB, Strace, Tcpdump
 
@@ -184,11 +185,38 @@ Flash using `st-flash` (outside docker):
 sudo st-flash write images/stm32f411_image/zephyr-recovery.bin 0x08000000
 ```
 
-### i.MX6ULL
+### i.MX6ULL (SD Card)
 Flash to SD card (replace `/dev/sdX` with your actual device, e.g., `/dev/sda`):
 ```bash
 zcat images/imx6ull_image/imx6ull-uart-bridge-image-imx6ull-ebyte.rootfs.wic.gz | sudo dd of=/dev/sdX bs=4M status=progress && sync
 ```
+
+### i.MX6ULL (eMMC Flashing from SD)
+To flash the internal eMMC memory while booted from an SD card:
+
+1.  **Boot from SD Card:**
+    *   Set DIP switches to SD Boot mode (usually `SW1: 1-OFF, 2-ON`).
+    *   Insert your flashed SD card and power on.
+
+2.  **U-Boot Verification (Optional):**
+    If you interrupt the boot process, you can verify storage devices:
+    ```bash
+    mmc dev 0   # Selects SD Card
+    mmc dev 1   # Selects eMMC
+    mmc part    # Shows partitions (e.g., 'emmc parts' info)
+    ```
+
+3.  **Flash to eMMC from Linux:**
+    Once booted into Linux from the SD card, the eMMC is typically visible as `/dev/mmcblk1`.
+    ```bash
+    # From Linux terminal (assuming image is available or accessible)
+    zcat [IMAGE_NAME].wic.gz | sudo dd of=/dev/mmcblk1 bs=4M status=progress && sync
+    ```
+
+4.  **Switch to eMMC Boot:**
+    *   Power off.
+    *   Set DIP switches to eMMC Boot mode (usually `SW1: 1-ON, 2-OFF`).
+    *   Remove SD card and power on.
 
 ### Wiring (UART Bridge)
 | i.MX6ULL (UART2) | STM32F411 (USART1) |

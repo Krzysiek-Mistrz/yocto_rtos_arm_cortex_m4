@@ -42,6 +42,7 @@ IMAGE_INSTALL:append = " \
     tcpdump \
     i2c-tools \
     spitools \
+    socat \
 "
 
 # UART bridge daemon for STM32F411 communication
