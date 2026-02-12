@@ -25,6 +25,9 @@ local_conf_header:
   systemd_usrmerge: |
     # systemd in Yocto Scarthgap requires usrmerge
     DISTRO_FEATURES:append = " usrmerge"
+  rm_work: |
+    # Remove temporary build files to save disk space
+    INHERIT += "rm_work"
 
 target:
   - imx6ull-uart-bridge-image

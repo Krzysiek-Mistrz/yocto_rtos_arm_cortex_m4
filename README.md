@@ -65,10 +65,10 @@ The system is designed as a "Split-Brain" architecture:
 cd yocto_project
 
 # 2. Start the builder container
-docker-compose up -d
+docker compose up --build -d
 
 # 3. Enter the container
-docker-compose exec yocto-builder bash
+docker compose exec yocto-builder bash
 ```
 
 ---
@@ -169,15 +169,25 @@ A monolithic RTOS binary providing:
 ## Flashing & Hardware
 
 ### STM32F411 (Black Pill)
+**Important Connection Notes:**
+*   **Dual USB Connection:** It is highly recommended to connect **both** the ST-Link debugger and the STM32 board (via its USB-C port) to your computer. This ensures stable power supply during the flashing process.
+*   **Mandatory Pins:** Ensure the following 4-wire connection between ST-Link and STM32:
+    *   **SWDIO** <-> **PA13** (DIO)
+    *   **SWCLK** <-> **PA14** (CLK)
+    *   **GND**   <-> **GND**
+    *   **3.3V**  <-> **3.3V** (Must be connected even if using USB power for voltage reference).
+*   **Reset:** If you get "Failed to enter SWD mode", hold the **Reset** button on the STM32, start the flash command, and release the button immediately after the first message appears.
+
 Flash using `st-flash` (outside docker):
 ```bash
-st-flash write meta-mono/build/tmp-newlib/deploy/images/stm32f411-dk/zephyr-recovery.bin 0x08000000
+# Use sudo if you encounter permission errors
+sudo st-flash write images/stm32f411_image/zephyr-recovery.bin 0x08000000
 ```
 
 ### i.MX6ULL
-Flash to SD card:
+Flash to SD card (replace `/dev/sdX` with your actual device, e.g., `/dev/sda`):
 ```bash
-zcat meta-mono/build/tmp/deploy/images/imx6ull-ebyte/imx6ull-uart-bridge-image-imx6ull-ebyte.wic.gz | sudo dd of=/dev/sdX bs=4M status=progress && sync
+zcat images/imx6ull_image/imx6ull-uart-bridge-image-imx6ull-ebyte.rootfs.wic.gz | sudo dd of=/dev/sdX bs=4M status=progress && sync
 ```
 
 ### Wiring (UART Bridge)
