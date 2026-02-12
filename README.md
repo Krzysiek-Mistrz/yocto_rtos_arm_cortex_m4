@@ -48,7 +48,9 @@ The project is fully containerized using Docker, ensuring reproducible builds fo
 
 The system is designed as a "Split-Brain" architecture:
 1.  **The Brain (Linux):** Handles network, storage, complex logic, and remote access.
-2.  **The Hands (Zephyr):** Handles real-time I/O, hardware safety, and board bring-up.
+2.  **The Hands (Zephyr):** Handles real-time I/O, hardware safety, and board bring-up.  
+
+![Example of embedded architecture (consinsts of STM32f411CEU6 and ECK20 6Y28C5E8-I &&  ECB20-PG6Y28C-I module)](imgs/zdj2.jpg)  
 
 ---
 
@@ -195,7 +197,7 @@ zcat images/imx6ull_image/imx6ull-uart-bridge-image-imx6ull-ebyte.rootfs.wic.gz 
 To flash the internal eMMC memory while booted from an SD card:
 
 1.  **Boot from SD Card:**
-    *   Set DIP switches to SD Boot mode (usually `SW1: 1-OFF, 2-ON`).
+    *   Set DIP switches to SD Boot mode  
     *   Insert your flashed SD card and power on.
 
 2.  **U-Boot Verification (Optional):**
@@ -225,7 +227,13 @@ To flash the internal eMMC memory while booted from an SD card:
 | RX (Pin Y)       | PA2 (TX)           |
 | GND              | GND                |
 
-*Note: Both run at 3.3V logic.*
+*Note: Both run at 3.3V logic.*  
+
+5.  **Verify the results**  
+- It boots correctly:  
+![correct boot and UART daemon runnning correctly](imgs/zdj1.jpg)  
+- The UART daemon is running:  
+
 
 ---
 
@@ -264,7 +272,7 @@ echo "GPIO_SET:C,13,0" | socat - UNIX-CONNECT:/var/run/uart-bridge.sock
 
 ## License
 
-All custom tools and modifications are provided under MIT License.
+All custom tools and modifications are provided under Modified MIT License.
 Zephyr RTOS is provided under Apache-2.0 license.
 Yocto Project components under their respective licenses.
 
